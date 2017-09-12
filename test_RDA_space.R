@@ -1,17 +1,22 @@
-x <- readRDS("sim1a.rds")
 library(vegan)
 library(adespatial)
 library(adegenet)
 library(bigsnpr)
+x <- readRDS("sim1a.rds")
+x1<-snp_attach("back/simu1.rds")
+G <- x1$genotypes[]
+
 # Find genetic clusters
-clus<-find.clusters(t(x$G), n.pca = 300, n.clust = 4)
+clus<-find.clusters(G, n.pca = 250, n.clust=3)
 # DAPC
-dapc<-dapc(t(x$G),  grp=clus$grp, n.pca=299, n.da=3)
+dapc<-dapc(G,  grp=clus$grp, n.pca=250)
 #PLots
 scatter.dapc(dapc)
 
+saveRDS(clus$grp, file="gen_clusters.rds")
+
 # Combine coordinates
-spa<-cbind(x$x,x$y)
+spa<-cbind(x1$x,x1$y)
 # Create Moran's I Eigenvector Maps
 mem_pos<-dbmem(spa,MEM.autocor = "positive")
 # RDA with all MEM
