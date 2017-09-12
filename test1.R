@@ -4,7 +4,7 @@ plot(dat$phenotype1, dat$envi)
 plot(dat$x, dat$y, col = dat$pop, pch = dat$pop %% 26 + 1, cex = 0.6)
 
 library(bigsnpr)
-library(plotly)
+library(plotly) 
 
 G <- add_code256(big_copy(t(dat$G), type = "raw"), code = bigsnpr:::CODE_012)
 CHR <- dat$chromosome
