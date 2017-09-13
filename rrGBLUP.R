@@ -1,6 +1,8 @@
 # infos <- readRDS("training/sim1a.rds")
 infos <- readRDS("validation/sim2a.rds")
 
+G <- add_code256(big_copy(t(infos$G), type = "raw"), code = bigsnpr:::CODE_012)
+
 maf <- snp_MAF(G)
 ind.col <- which(maf > 0.05)
 G2 <- big_copy(G, ind.col = ind.col)
@@ -39,5 +41,5 @@ G3[, new.ind] <- rnorm(1000)
 ind.col[ind]
 
 
-snps12 <- ind.col[ind]
-write(snps12, "gwas-5perc.txt", ncolumns = 1)
+snps13 <- ind.col[ind]
+write(snps13, "gwas-eval.txt", ncolumns = 1)
