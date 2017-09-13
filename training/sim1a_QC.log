@@ -1,0 +1,29 @@
+PLINK v1.90b4.6 64-bit (15 Aug 2017)
+Options in effect:
+  --bfile training/sim1a_QC
+  --extract /tmp/Rtmp67OTwE/file304e2f394d04.prune.in
+  --genome
+  --min 0.55
+  --out training/sim1a_QC
+  --threads 1
+
+Hostname: localhost.localdomain
+Working directory: /home/privef/Bureau/SSMPG-17
+Start time: Tue Sep 12 14:18:33 2017
+
+Random number seed: 1505218713
+7703 MB RAM detected; reserving 3851 MB for main workspace.
+1955 variants loaded from .bim file.
+1000 people (0 males, 0 females, 1000 ambiguous) loaded from .fam.
+Ambiguous sex IDs written to training/sim1a_QC.nosex .
+--extract: 1955 variants remaining.
+Warning: At least 912 duplicate IDs in --extract file.
+Using 1 thread.
+Before main variant filters, 1000 founders and 0 nonfounders present.
+Calculating allele frequencies... done.
+1955 variants and 1000 people pass filters and QC.
+Note: No phenotypes present.
+IBD calculations complete.
+Finished writing training/sim1a_QC.genome .
+
+End time: Tue Sep 12 14:18:33 2017

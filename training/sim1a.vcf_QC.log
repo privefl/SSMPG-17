@@ -1,0 +1,36 @@
+PLINK v1.90b4.6 64-bit (15 Aug 2017)
+Options in effect:
+  --geno 0.1
+  --hwe 1e-10
+  --maf 0.05
+  --make-bed
+  --mind 0.1
+  --out training/sim1a.vcf_QC
+  --vcf training/sim1a.vcf
+
+Hostname: localhost.localdomain
+Working directory: /home/privef/Bureau/SSMPG-17
+Start time: Tue Sep 12 13:56:31 2017
+
+Random number seed: 1505217391
+7703 MB RAM detected; reserving 3851 MB for main workspace.
+--vcf: training/sim1a.vcf_QC-temporary.bed +
+training/sim1a.vcf_QC-temporary.bim + training/sim1a.vcf_QC-temporary.fam
+written.
+5940 variants loaded from .bim file.
+1000 people (0 males, 0 females, 1000 ambiguous) loaded from .fam.
+Ambiguous sex IDs written to training/sim1a.vcf_QC.nosex .
+0 people removed due to missing genotype data (--mind).
+Using 1 thread (no multithreaded calculations invoked).
+Before main variant filters, 1000 founders and 0 nonfounders present.
+Calculating allele frequencies... done.
+0 variants removed due to missing genotype data (--geno).
+--hwe: 8 variants removed due to Hardy-Weinberg exact test.
+3985 variants removed due to minor allele threshold(s)
+(--maf/--max-maf/--mac/--max-mac).
+1947 variants and 1000 people pass filters and QC.
+Note: No phenotypes present.
+--make-bed to training/sim1a.vcf_QC.bed + training/sim1a.vcf_QC.bim +
+training/sim1a.vcf_QC.fam ... done.
+
+End time: Tue Sep 12 13:56:31 2017

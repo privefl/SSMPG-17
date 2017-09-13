@@ -1,0 +1,8 @@
+- remove low MAFs
+- don't remove low MAF
+- by hand clumping
+- keep all dummy variables
+- union cmsa threshold + grand
+- filtrer plus fort sur la maf
+- gwas iterative
+- enlever outlier + top
