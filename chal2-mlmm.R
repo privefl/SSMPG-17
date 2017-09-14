@@ -18,11 +18,7 @@ mygwas <- mlmm::mlmm(Y = proj, X = X, K = K,
                    nbchunks = 2,
                    maxsteps = 100)
 
-snp_infos <- data.frame(
-  SNP = ind.col,
-  Chr = CHR, 
-  Pos = POS
-)
+snp_infos <- data.frame(SNP = ind.col, Chr = CHR, Pos = POS)
 
 plot_step_table(mygwas,'extBIC') # EBIC plot
 plot_step_table(mygwas,'maxpval') # mbonf criterion plot

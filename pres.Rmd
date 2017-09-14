@@ -22,11 +22,152 @@ background-size: 100%
 
 ---
 
+```{r}
+str(infos <- readRDS("cichlid_data/cichlid.rds"), width = 65,
+    strict.width = "wrap")
+```
+
+---
+
+```{r}
+# devtools::install_github("privefl/bigsnpr")
+library(bigsnpr)
+
+G <- mat_to_geno(t(infos$G))
+summary(maf <- snp_MAF(G))
+
+# Filter on MAF > 5%
+ind.maf.ok <- which(maf > 0.05)
+G <- big_copy(G, ind.col = ind.maf.ok)
+CHR <- readr::parse_number(infos$chromosome)[ind.maf.ok]
+POS <- infos$position[ind.maf.ok]
+```
+
+---
+
+## PCA
+
+```{r, results='hide', out.width='80%'}
+obj.svd <- snp_autoSVD(G, CHR, POS)
+plot(obj.svd, type = "scores")
+```
+
+---
+
+## Remove outliers
+
+```{r}
+not.outliers <- which(predict(obj.svd)[, 1] < 20)
+G <- big_copy(G, ind.row = not.outliers)
+```
+
+---
+
+## PCA again
+
+```{r, results='hide', out.width='80%'}
+obj.svd <- snp_autoSVD(G, CHR, POS)
+plot(obj.svd)
+```
+
+---
+
+```{r}
+library(ggplot2)
+plot(obj.svd, type = "scores") + 
+  aes(color = infos$fishing_pressure[not.outliers]) + 
+  labs(color = "Pressure")
+```
+
+---
+
+## Determine the "axis of pressure" (1/3)
+
+```{r, out.width='80%'}
+PCs <- obj.svd$u[, 1:2]
+gimme_centers <- kmeans(PCs, centers = 3)$centers
+plot(PCs, col = infos$fishing_pressure[not.outliers])
+points(gimme_centers, col = "green", pch = 19)
+```
+
+---
+
+## Determine the "axis of pressure" (2/3)
+
+```{r}
+# Get the projections on the axis
+ind.centers <- apply(gimme_centers, 2, which.max)
+two_centers <- gimme_centers[ind.centers, ]
+vec.dir <- diff(two_centers)
+proj <- drop(tcrossprod(PCs, vec.dir))
+
+# Plot the line on which to project
+slope <- vec.dir[2] / vec.dir[1]
+intercept <- two_centers[1, 2] - two_centers[1, 1] * slope
+p <- bigstatsr:::MY_THEME(
+  qplot(PCs[, 1], PCs[, 2], col = proj) + 
+  viridis::scale_color_viridis() + 
+  geom_abline(slope = slope, intercept = intercept)
+)
+```
+
+---
+
+## Determine the "axis of pressure" (3/3)
+
+```{r, echo=FALSE}
+p
+```
+
+---
+
+## Use MLMM on the projection of pressure
+
+```{r, results='hide'}
+# install.packages("http://mouse.cs.ucla.edu/emma/emma_1.1.2.tar.gz", 
+#                  repos = NULL, type = "source")
+# devtools::install_github("Gregor-Mendel-Institute/mlmm")
+library(mlmm)
+
+# Fake names
+names.fake <- paste0("I", rows_along(G))
+K <- big_tcrossprodSelf(G, snp_scaleBinom())[]
+dimnames(K) <- list(names.fake, names.fake)
+
+X <- G[]
+dimnames(X) <- list(names.fake, ind.maf.ok)
+names(proj) <- names.fake
+
+mygwas <- mlmm(Y = proj, X = X, K = K,
+               nbchunks = 2, maxsteps = 100)
+```
+
+---
+
+```{r}
+snp_infos <- data.frame(SNP = ind.maf.ok, Chr = CHR, Pos = POS)
+plot_opt_GWAS(mygwas, 'mbonf', snp_infos, 0.1, 
+              main = "optimal (mBonf)")
+```
+
+---
+
+## Our submission
+
+```{r}
+(ind <- as.integer(mygwas$opt_mbonf$cof))
+
+write(ind, "chal2.txt", ncolumns = 1)
+```
+
+---
+
 class: center, middle, inverse
 
 # Thanks!
 
-### Presentation available at
-### https://privefl.github.io/R-presentation/ggplot2.html
+</br>
+
+### GWAS are the best!
 
 .footnote[Slides created via the R package [**xaringan**](https://github.com/yihui/xaringan).]
