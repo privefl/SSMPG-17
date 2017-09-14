@@ -1,0 +1,32 @@
+---
+title: "Challenge 2: Cichlid data"
+author: "Florian Privé & Julian Wittische"
+date: "September 14, 2017"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+knitr::opts_chunk$set(fig.align = "center", dev = "svg", fig.asp = 0.7)
+```
+
+class: center, middle, inverse
+background-image: url(cover.JPG)
+background-size: 100%
+
+---
+
+class: center, middle, inverse
+
+# Thanks!
+
+### Presentation available at
+### https://privefl.github.io/R-presentation/ggplot2.html
+
+.footnote[Slides created via the R package [**xaringan**](https://github.com/yihui/xaringan).]
