@@ -21,6 +21,7 @@ cov_add <- NULL
 ind <- NULL
 G3 <- scale(G2[])
 
+
 cov3 <- cbind(cov_base, cov_add) 
 
 ans <- rrBLUP::mixed.solve(normalize(infos$phenotype1), Z = G3, X = cov3, SE = TRUE,
@@ -29,7 +30,7 @@ ans <- rrBLUP::mixed.solve(normalize(infos$phenotype1), Z = G3, X = cov3, SE = T
 score <- ans$u / ans$u.SE
 length(score)
 pval <- pchisq(score^2, df = 1, lower.tail = FALSE)
-plot(-log10(pval))
+plot(-log10(pval), col = CHR)
 
 
 new.ind <- which.min(pval)
@@ -39,5 +40,5 @@ G3[, new.ind] <- rnorm(1000)
 ind.col[ind]
 
 
-snps13 <- ind.col[ind]
-write(snps13, "gwas-eval.txt", ncolumns = 1)
+# snps13 <- ind.col[ind]
+# write(snps13, "gwas-eval.txt", ncolumns = 1)
