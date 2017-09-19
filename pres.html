@@ -26,12 +26,223 @@ background-size: 100%
 
 ---
 
+
+```r
+str(infos &lt;- readRDS("cichlid_data/cichlid.rds"), width = 65,
+    strict.width = "wrap")
+```
+
+```
+## List of 8
+## $ position : int [1:54869] 3190 3203 3230 3310 3311 3313 3314
+##    3321 3340 3352 ...
+## $ chromosome : chr [1:54869] "Contig237" "Contig237" "Contig237"
+##    "Contig237" ...
+## $ G : num [1:54869, 1:75] 0 2 0 0 1 0 0 2 0 0 ...
+## ..- attr(*, "dimnames")=List of 2
+## .. ..$ : chr [1:54869] "Contig237_3190" "Contig237_3203"
+##    "Contig237_3230" "Contig237_3310" ...
+## .. ..$ : chr [1:75] "VirSWA1" "VirSWA2" "VirSWA3" "VirSWA4" ...
+## $ id : chr [1:75] "VirSWA1" "VirSWA2" "VirSWA3" "VirSWA4" ...
+## $ genus : chr [1:75] "Copadichromis" "Copadichromis"
+##    "Copadichromis" "Copadichromis" ...
+## $ species : chr [1:75] "virginalis" "virginalis" "virginalis"
+##    "virginalis" ...
+## $ place : chr [1:75] "South West Arm" "South West Arm" "South
+##    West Arm" "South West Arm" ...
+## $ fishing_pressure: chr [1:75] "1" "1" "1" "1" ...
+```
+
+---
+
+
+```r
+# devtools::install_github("privefl/bigsnpr")
+library(bigsnpr)
+```
+
+```
+## Loading required package: bigstatsr
+```
+
+```r
+G &lt;- mat_to_geno(t(infos$G))
+summary(maf &lt;- snp_MAF(G))
+```
+
+```
+##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+## 0.006667 0.006667 0.013333 0.057651 0.046667 0.500000
+```
+
+```r
+# Filter on MAF &gt; 5%
+ind.maf.ok &lt;- which(maf &gt; 0.05)
+G &lt;- big_copy(G, ind.col = ind.maf.ok)
+CHR &lt;- readr::parse_number(infos$chromosome)[ind.maf.ok]
+POS &lt;- infos$position[ind.maf.ok]
+```
+
+---
+
+## PCA
+
+
+```r
+obj.svd &lt;- snp_autoSVD(G, CHR, POS)
+plot(obj.svd, type = "scores")
+```
+
+&lt;img src="pres_files/figure-html/unnamed-chunk-3-1.svg" width="80%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Remove outliers
+
+
+```r
+not.outliers &lt;- which(predict(obj.svd)[, 1] &lt; 20)
+G &lt;- big_copy(G, ind.row = not.outliers)
+```
+
+---
+
+## PCA again
+
+
+```r
+obj.svd &lt;- snp_autoSVD(G, CHR, POS)
+plot(obj.svd)
+```
+
+&lt;img src="pres_files/figure-html/unnamed-chunk-5-1.svg" width="80%" style="display: block; margin: auto;" /&gt;
+
+---
+
+
+```r
+library(ggplot2)
+plot(obj.svd, type = "scores") + 
+  aes(color = infos$fishing_pressure[not.outliers]) + 
+  labs(color = "Pressure")
+```
+
+&lt;img src="pres_files/figure-html/unnamed-chunk-6-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Determine the "axis of pressure" (1/3)
+
+
+```r
+PCs &lt;- obj.svd$u[, 1:2]
+gimme_centers &lt;- kmeans(PCs, centers = 3)$centers
+plot(PCs, col = infos$fishing_pressure[not.outliers])
+points(gimme_centers, col = "green", pch = 19)
+```
+
+&lt;img src="pres_files/figure-html/unnamed-chunk-7-1.svg" width="80%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Determine the "axis of pressure" (2/3)
+
+
+```r
+# Get the projections on the axis
+ind.centers &lt;- apply(gimme_centers, 2, which.max)
+two_centers &lt;- gimme_centers[ind.centers, ]
+vec.dir &lt;- diff(two_centers)
+proj &lt;- drop(tcrossprod(PCs, vec.dir))
+
+# Plot the line on which to project
+slope &lt;- vec.dir[2] / vec.dir[1]
+intercept &lt;- two_centers[1, 2] - two_centers[1, 1] * slope
+p &lt;- bigstatsr:::MY_THEME(
+  qplot(PCs[, 1], PCs[, 2], col = proj) + 
+  viridis::scale_color_viridis() + 
+  geom_abline(slope = slope, intercept = intercept)
+)
+```
+
+---
+
+## Determine the "axis of pressure" (3/3)
+
+&lt;img src="pres_files/figure-html/unnamed-chunk-9-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Use MLMM on the projection of pressure
+
+
+```r
+# install.packages("http://mouse.cs.ucla.edu/emma/emma_1.1.2.tar.gz", 
+#                  repos = NULL, type = "source")
+# devtools::install_github("Gregor-Mendel-Institute/mlmm")
+library(mlmm)
+```
+
+```
+## Loading required package: emma
+```
+
+```
+## package 'mlmm' (version 0.1.1) is loaded
+## dev at https://github.com/Gregor-Mendel-Institute/mlmm
+```
+
+```r
+# Fake names
+names.fake &lt;- paste0("I", rows_along(G))
+K &lt;- big_tcrossprodSelf(G, snp_scaleBinom())[]
+dimnames(K) &lt;- list(names.fake, names.fake)
+
+X &lt;- G[]
+dimnames(X) &lt;- list(names.fake, ind.maf.ok)
+names(proj) &lt;- names.fake
+
+mygwas &lt;- mlmm(Y = proj, X = X, K = K,
+               nbchunks = 2, maxsteps = 100)
+```
+
+---
+
+
+```r
+snp_infos &lt;- data.frame(SNP = ind.maf.ok, Chr = CHR, Pos = POS)
+plot_opt_GWAS(mygwas, 'mbonf', snp_infos, 0.1, 
+              main = "optimal (mBonf)")
+```
+
+&lt;img src="pres_files/figure-html/unnamed-chunk-11-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Our submission
+
+
+```r
+(ind &lt;- as.integer(mygwas$opt_mbonf$cof))
+```
+
+```
+## [1] 17580 47051
+```
+
+```r
+write(ind, "chal2.txt", ncolumns = 1)
+```
+
+---
+
 class: center, middle, inverse
 
 # Thanks!
 
-### Presentation available at
-### https://privefl.github.io/R-presentation/ggplot2.html
+&lt;/br&gt;
+
+### GWAS are the best!
 
 .footnote[Slides created via the R package [**xaringan**](https://github.com/yihui/xaringan).]
     </textarea>
